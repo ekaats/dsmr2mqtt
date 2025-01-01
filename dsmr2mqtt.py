@@ -144,8 +144,9 @@ def connect_mqtt():
         else:
             print("Failed to connect, return code %d\n", rc)
 
-    client = mqtt_client.Client(MQTT_CLIENTID)
-#    client.username_pw_set(username, password)
+    client = mqtt_client.Client(mqtt_client.CallbackAPIVersion.VERSION2, MQTT_CLIENTID)
+    if MQTT_USERNAME is not None:
+        client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
     client.on_connect = on_connect
     client.connect(MQTT_HOST, MQTT_PORT)
     return client
