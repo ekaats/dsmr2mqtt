@@ -189,26 +189,87 @@ def process(topic, value):
     print(f"{topic} has no value")
 
 def publish(telegram):
-  process("dsmr/meter-stats/dsmr_version", telegram.P1_MESSAGE_HEADER.value)
-  process("dsmr/reading/timestamp", str(telegram.P1_MESSAGE_TIMESTAMP.value))
-  process("dsmr/meter-stats/dsmr_meter_id", telegram.EQUIPMENT_IDENTIFIER.value)
-  process("dsmr/reading/electricity_delivered_1", telegram.ELECTRICITY_USED_TARIFF_1.value)
-  process("dsmr/reading/electricity_delivered_2", telegram.ELECTRICITY_USED_TARIFF_2.value)
-  process("dsmr/reading/electricity_returned_1", telegram.ELECTRICITY_DELIVERED_TARIFF_1.value)
-  process("dsmr/reading/electricity_returned_2", telegram.ELECTRICITY_DELIVERED_TARIFF_2.value)
-  process("dsmr/meter-stats/electricity_tariff", telegram.ELECTRICITY_ACTIVE_TARIFF.value)
-  process("dsmr/reading/electricity_currently_delivered", telegram.CURRENT_ELECTRICITY_USAGE.value)
-  process("dsmr/reading/electricity_currently_returned", telegram.CURRENT_ELECTRICITY_DELIVERY.value)
-  process("dsmr/meter-stats/power_failure_count", telegram.LONG_POWER_FAILURE_COUNT.value)
-  process("dsmr/meter-stats/voltage_sag_count_l1", telegram.VOLTAGE_SAG_L1_COUNT.value)
-  process("dsmr/meter-stats/voltage_swell_count_l1", telegram.VOLTAGE_SWELL_L1_COUNT.value)
-  process("dsmr/meter-stats/dsmr_meter_type", telegram.DEVICE_TYPE.value)
-  process("dsmr/reading/phase_currently_delivered_l1", telegram.INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE.value)
-  process("dsmr/reading/phase_currently_returned_l1", telegram.INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE.value)
-  process("dsmr/reading/phase_voltage_l1", telegram.INSTANTANEOUS_VOLTAGE_L1.value)
-  process("dsmr/reading/phase_power_current_l1", telegram.INSTANTANEOUS_CURRENT_L1.value)
-  process("dsmr/meter-stats/gas_meter_id", telegram.EQUIPMENT_IDENTIFIER_GAS.value)
-  process("dsmr/consumption/gas/delivered", telegram.HOURLY_GAS_METER_READING.value)
+    for attr, value in telegram:
+        match attr:
+            case 'P1_MESSAGE_HEADER':
+                process("dsmr/meter-stats/dsmr_version", value=value.value)
+            case 'P1_MESSAGE_TIMESTAMP':
+                process("dsmr/reading/timestamp", value=str(value))
+            case 'EQUIPMENT_IDENTIFIER':
+                process("dsmr/meter-stats/dsmr_meter_id", value=value.value)
+            case 'ELECTRICITY_USED_TARIFF_1':
+                process("dsmr/reading/electricity_delivered_1", value=value.value)
+            case 'ELECTRICITY_USED_TARIFF_2':
+                process("dsmr/reading/electricity_delivered_2", value=value.value)
+            case 'ELECTRICITY_DELIVERED_TARIFF_1':
+                process("dsmr/reading/electricity_returned_1", value=value.value)
+            case 'ELECTRICITY_DELIVERED_TARIFF_2':
+                process("dsmr/reading/electricity_returned_2", value=value.value)
+            case 'ELECTRICITY_ACTIVE_TARIFF':
+                process("dsmr/meter-stats/electricity_tariff", value=value.value)
+            case 'CURRENT_ELECTRICITY_USAGE':
+                process("dsmr/reading/electricity_currently_delivered", value=value.value)
+            case 'CURRENT_ELECTRICITY_DELIVERY':
+                process("dsmr/reading/electricity_currently_returned", value=value.value)
+            case 'LONG_POWER_FAILURE_COUNT':
+                process("dsmr/meter-stats/long_power_failure_count", value=value.value)
+            case 'SHORT_POWER_FAILURE_COUNT':
+                process("dsmr/meter-stats/power_failure_count", value=value.value)
+            case 'VOLTAGE_SAG_L1_COUNT':
+                process("dsmr/meter-stats/voltage_sag_count_l1", value=value.value)
+            case 'VOLTAGE_SAG_L2_COUNT':
+                process("dsmr/meter-stats/voltage_sag_count_l2", value=value.value)
+            case 'VOLTAGE_SAG_L3_COUNT':
+                process("dsmr/meter-stats/voltage_sag_count_l3", value=value.value)
+            case 'VOLTAGE_SWELL_L1_COUNT':
+                process("dsmr/meter-stats/voltage_swell_count_l1", value=value.value)
+            case 'VOLTAGE_SWELL_L2_COUNT':
+                process("dsmr/meter-stats/voltage_swell_count_l2", value=value.value)
+            case 'VOLTAGE_SWELL_L3_COUNT':
+                process("dsmr/meter-stats/voltage_swell_count_l3", value=value.value)
+            case 'TEXT_MESSAGE_CODE':
+                pass # Not used
+            case 'TEXT_MESSAGE':
+                pass # Not used
+            case 'DEVICE_TYPE':
+                process("dsmr/meter-stats/dsmr_meter_type", value=value.value)
+            case 'INSTANTANEOUS_VOLTAGE_L1':
+                process("dsmr/reading/phase_voltage_l1", value=value.value)
+            case 'INSTANTANEOUS_VOLTAGE_L2':
+                process("dsmr/reading/phase_voltage_l2", value=value.value)
+            case 'INSTANTANEOUS_VOLTAGE_L3':
+                process("dsmr/reading/phase_voltage_l3", value=value.value)
+            case 'INSTANTANEOUS_CURRENT_L1':
+                process("dsmr/reading/phase_power_current_l1", value=value.value)
+            case 'INSTANTANEOUS_CURRENT_L2':
+                process("dsmr/reading/phase_power_current_l2", value=value.value)
+            case 'INSTANTANEOUS_CURRENT_L3':
+                process("dsmr/reading/phase_power_current_l3", value=value.value)
+            case 'INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE':
+                pass
+            case 'INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE':
+                pass
+            case 'INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE':
+                pass
+            case 'INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE':
+                pass
+            case 'INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE':
+                pass
+            case 'INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE':
+                pass
+            case 'EQUIPMENT_IDENTIFIER_GAS':
+                process("dsmr/meter-stats/gas_meter_id", value=value.value)
+            case 'HOURLY_GAS_METER_READING':
+                process("dsmr/consumption/gas/delivered", value=value.value)
+            case 'POWER_EVENT_FAILURE_LOG':
+                # A list of dicts with each power failure event. Not used at the moment
+                pass
+            case 'EQUIPMENT_IDENTIFIER_GAS':
+                process("dsmr/meter-stats/gas_meter_id", value=value)
+            case 'HOURLY_GAS_METER_READING':
+                process("dsmr/consumption/gas/delivered", value=value)
+            case _:
+                raise Exception("Not Implemented")
 
 client = connect_mqtt()
 lastrun = datetime(2000,1,1)
