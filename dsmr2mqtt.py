@@ -109,8 +109,8 @@ class DataPersistence:
 
 
     def write_datafile(self):
-        with open(READINGS_PERISTENCE_DATA_PATH, 'w') as outfile:
-            self.data['file_date'] = datetime.now
+        with open(READINGS_PERISTENCE_DATA_PATH, 'w', encoding='utf-8') as outfile:
+            self.data['file_date'] = str(datetime.now())
             json.dump(self.data, outfile)
 
   
