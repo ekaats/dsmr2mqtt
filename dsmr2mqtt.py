@@ -1,5 +1,5 @@
 import os
-import json 
+import json
 
 from datetime import datetime
 from dsmr_parser import telegram_specifications
@@ -7,17 +7,40 @@ from dsmr_parser.clients import SerialReader, SERIAL_SETTINGS_V5
 
 from paho.mqtt import client as mqtt_client
 
+from pathlib import Path
 
-# ENVIRONMENT VARIABLES
-MQTT_HOST = os.environ.get('MQTT_HOST', 'mqtt')
-MQTT_PORT = int(os.environ.get('MQTT_PORT', 1883))
-MQTT_CLIENTID = os.environ.get('MQTT_CLIENTID', 'dsmr2mqtt')
-DSMR_PORT = os.environ.get('DSMR_PORT', '/dev/ttyUSB0')
-DSMR_VERSION = os.environ.get('DSMR_VERSION', 5)
-REPORT_INTERVAL = int(os.environ.get('REPORT_INTERVAL', 15))
-GAS_CURRENT_CONSUMPTION_REPORT_INTERVAL = int(os.environ.get('GAS_CURRENT_CONSUMPTION_REPORT_INTERVAL', 60))
-READINGS_PERISTENCE_DATA_PATH = os.environ.get('READINGS_PERISTENCE_DATA_PATH', '/data/readings.json')
-LASTREADING_TIMESTAMP = datetime.now().strftime('%Y-%m-%d %H:%M:%s')
+
+def is_docker():
+    cgroup = Path('/proc/self/cgroup')
+    return Path('/.dockerenv').is_file() or cgroup.is_file() and 'docker' in cgroup.read_text()
+
+if is_docker() == True:
+    # ENVIRONMENT VARIABLES
+    MQTT_HOST = os.environ.get('MQTT_HOST', 'mqtt')
+    MQTT_PORT = int(os.environ.get('MQTT_PORT', 1883))
+    MQTT_CLIENTID = os.environ.get('MQTT_CLIENTID', 'dsmr2mqtt')
+    MQTT_USERNAME = os.environ.get('MQTT_USERNAME', 'mqtt')
+    MQTT_PASSWORD = os.environ.get('MQTT_PASSWORD', '')
+    DSMR_PORT = os.environ.get('DSMR_PORT', '/dev/ttyUSB0')
+    DSMR_VERSION = os.environ.get('DSMR_VERSION', 5)
+    REPORT_INTERVAL = int(os.environ.get('REPORT_INTERVAL', 15))
+    GAS_CURRENT_CONSUMPTION_REPORT_INTERVAL = int(os.environ.get('GAS_CURRENT_CONSUMPTION_REPORT_INTERVAL', 60))
+    READINGS_PERISTENCE_DATA_PATH = os.environ.get('READINGS_PERISTENCE_DATA_PATH', '/data/readings.json')
+    LASTREADING_TIMESTAMP = datetime.now().strftime('%Y-%m-%d %H:%M:%s')
+else:
+    import json
+    with open("settings.json") as settings_file:
+        settings = json.load(settings_file)
+        MQTT_HOST = settings.get("mqtt_host", "mqtt")
+        MQTT_PORT = settings.get("mqtt_port", 1883)
+        MQTT_CLIENTID = settings.get("mqtt_client-id", "dsmr2mqtt")
+        MQTT_USERNAME = settings.get("mqtt_username", None)
+        MQTT_PASSWORD = settings.get("mqtt_password", None)
+        DSMR_PORT = settings.get("dsmr_port", "/dev/ttyUSB0")
+        DSMR_VERSION = settings.get("dsmr_version", 5)
+        REPORT_INTERVAL = settings.get("reportinterval", 15)
+        READINGS_PERISTENCE_DATA_PATH = settings.get('persistence_data_path', 'data/readings.json')
+        LASTREADING_TIMESTAMP = datetime.now().strftime('%Y-%m-%d %H:%M:%s')
 
 print("MQTT Host:       ", MQTT_HOST)
 print("MQTT Port:       ", MQTT_PORT)

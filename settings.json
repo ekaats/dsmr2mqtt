@@ -1,0 +1,9 @@
+{
+    "dsmr_port": "/dev/ttyUSB0",
+    "dsmr_version": "5",
+    "mqtt_client-id": "dsmr2mqtt",
+    "mqtt_host": "192.168.1.1",
+    "mqtt_post": 1883,
+    "mqtt_username": "hass-client",
+    "mqtt_password": "password"
+}

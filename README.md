@@ -14,6 +14,9 @@ Running Home Assistant as container in a k8s cluster, reading the output of my s
 
 Not owning a 'Slimme Meter' but just a P1 cable to read out my smart electricity meter, this project is started to have the telegrams read from the meter and pushed to MQTT for Home Assistant to pick up and process. Regardless on which nodew it is running.
 
+## Run directly
+The script can be used directly. When run this way, settings are read from 'settings.json'.
+
 ## Docker
 
 ### Environment variables
