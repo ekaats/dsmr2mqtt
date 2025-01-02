@@ -293,20 +293,33 @@ def publish(telegram):
             case "EQUIPMENT_IDENTIFIER":
                 process("dsmr/meter-stats/dsmr_meter_id", value=value.value)
             case "ELECTRICITY_USED_TARIFF_1":
+                # Meter Reading electricity delivered to client (low tariff) in 0,001 kWh
                 process("dsmr/reading/electricity_delivered_1", value=value.value)
+
             case "ELECTRICITY_USED_TARIFF_2":
+                # Meter Reading electricity delivered to client (normal tariff) in 0,001 kWh
                 process("dsmr/reading/electricity_delivered_2", value=value.value)
+
             case "ELECTRICITY_DELIVERED_TARIFF_1":
+                # Meter Reading electricity delivered by client (low tariff) in 0,001 kWh
                 process("dsmr/reading/electricity_returned_1", value=value.value)
+
             case "ELECTRICITY_DELIVERED_TARIFF_2":
+                # Meter Reading electricity delivered by client (normal tariff) in 0,001 kWh
                 process("dsmr/reading/electricity_returned_2", value=value.value)
+
             case "ELECTRICITY_ACTIVE_TARIFF":
+                # Tariff indicator electricity. The tariff indicator can be used to switch tariff
+                # dependent loads e.g boilers. This is responsibility of the P1 user
                 process("dsmr/meter-stats/electricity_tariff", value=value.value)
+
             case "CURRENT_ELECTRICITY_USAGE":
+                # Actual electricity power delivered (+P) in 1 Watt resolution
                 process(
                     "dsmr/reading/electricity_currently_delivered", value=value.value
                 )
             case "CURRENT_ELECTRICITY_DELIVERY":
+                # Actual electricity power received (-P) in 1 Watt resolution
                 process(
                     "dsmr/reading/electricity_currently_returned", value=value.value
                 )
@@ -363,12 +376,66 @@ def publish(telegram):
             case "POWER_EVENT_FAILURE_LOG":
                 # A list of dicts with each power failure event. Not used at the moment
                 pass
-            case "EQUIPMENT_IDENTIFIER_GAS":
-                process("dsmr/meter-stats/gas_meter_id", value=value)
-            case "HOURLY_GAS_METER_READING":
-                process("dsmr/consumption/gas/delivered", value=value)
             case _:
                 raise Exception("Not Implemented")
+                """
+                These MQTT topics are used in the HA DSMR reader,
+                but don't seem to have a good DSMR counterpart
+                
+                "dsmr/reading/phase_currently_delivered_l1"
+                "dsmr/reading/phase_currently_delivered_l2"
+                "dsmr/reading/phase_currently_delivered_l3"
+                "dsmr/reading/phase_currently_returned_l1"
+                "dsmr/reading/phase_currently_returned_l2"
+                "dsmr/reading/phase_currently_returned_l3"
+                "dsmr/reading/extra_device_delivered"
+                
+                "dsmr/day-consumption/electricity1_cost"
+                "dsmr/day-consumption/electricity2_cost"
+                "dsmr/day-consumption/electricity_cost_merged"
+                "dsmr/day-consumption/gas_cost"
+                "dsmr/day-consumption/total_cost"
+                "dsmr/day-consumption/energy_supplier_price_electricity_delivered_1"
+                "dsmr/day-consumption/energy_supplier_price_electricity_delivered_2"
+                "dsmr/day-consumption/energy_supplier_price_electricity_returned_2"
+                "dsmr/day-consumption/energy_supplier_price_gas"
+                "dsmr/day-consumption/fixed_cost"
+                
+                "dsmr/meter-stats/rejected_telegrams"
+                
+                "dsmr/current-month/electricity1"
+                "dsmr/current-month/electricity2"
+                "dsmr/current-month/electricity1_returned"
+                "dsmr/current-month/electricity2_returned"
+                "dsmr/current-month/electricity_merged"
+                "dsmr/current-month/electricity_returned_merged"
+                "dsmr/current-month/electricity1_cost"
+                "dsmr/current-month/electricity2_cost"
+                "dsmr/current-month/electricity_cost_merged"
+                "dsmr/current-month/gas"
+                "dsmr/current-month/gas_cost"
+                "dsmr/current-month/fixed_cost"
+                "dsmr/current-month/total_cost"
+                
+                "dsmr/current-year/electricity1"
+                "dsmr/current-year/electricity2"
+                "dsmr/current-year/electricity1_returned"
+                "dsmr/current-year/electricity2_returned"
+                "dsmr/current-year/electricity_merged"
+                "dsmr/current-year/electricity_returned_merged"
+                "dsmr/current-year/electricity1_cost"
+                "dsmr/current-year/electricity2_cost"
+                "dsmr/current-year/electricity_cost_merged"
+                "dsmr/current-year/gas"
+                "dsmr/current-year/gas_cost"
+                "dsmr/current-year/fixed_cost"
+                "dsmr/current-year/total_cost"
+                
+                "dsmr/consumption/quarter-hour-peak-electricity/average_delivered"
+                "dsmr/consumption/quarter-hour-peak-electricity/read_at_start"
+                "dsmr/consumption/quarter-hour-peak-electricity/read_at_end"
+                
+                """
 
 
 client = connect_mqtt()
