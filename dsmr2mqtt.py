@@ -467,7 +467,7 @@ else:
         if (datetime.now() - lastrun).seconds >= REPORT_INTERVAL:
             # reset daily stats on midnight
             if datetime.now().hour == 0:
-                print(f"its now {datetime.now().strftime("%Y-%m-%d %H:%M:%s")}, time to reset daily stats")
+                print(f"its now {datetime.now().strftime('%Y-%m-%d %H:%M:%s')}, time to reset daily stats")
                 stats_persist.write_datafile()
                 publish_daily()
                 stats.reset_daily_stats()
