@@ -384,6 +384,13 @@ stats = ConsumptionStats(
     stats_persist.get_value("electricity_delivered_high_value"),
     stats_persist.get_value("gas_meter_value"),
 )
+try:
+    serial_obj = serial_reader.read_as_object()
+except Exception as e:
+    print(f"Exception: {e}")
+    pass
+else:
+    for telegram in serial_obj:
 
 for telegram in serial_reader.read_as_object():
     if (datetime.now() - lastrun).seconds >= REPORT_INTERVAL:
