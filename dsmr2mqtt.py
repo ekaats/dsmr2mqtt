@@ -234,16 +234,6 @@ def process(topic, value):
             )
             client.publish("dsmr/day-consumption/gas", stats.gas_today())
 
-            # also periodically update electricity totals
-            client.publish(
-                "dsmr/day-consumption/electricity_merged",
-                stats.electricity_consumption_today(),
-            )
-            client.publish(
-                "dsmr/day-consumption/electricity_returned_merged",
-                stats.electricity_delivered_today(),
-            )
-
         if topic == "dsmr/reading/electricity_delivered_1":
             stats.update_electricity_consumption("0001", str(value))
             client.publish(
@@ -277,6 +267,21 @@ def process(topic, value):
     except KeyError:
         print(f"{topic} has no value")
 
+def publish_daily():
+    """
+    This runs daily. It gives the consumption amount for the day at midnight
+
+    :return:
+    """
+    # also periodically update electricity totals
+    client.publish(
+        "dsmr/day-consumption/electricity_merged",
+        stats.electricity_consumption_today(),
+    )
+    client.publish(
+        "dsmr/day-consumption/electricity_returned_merged",
+        stats.electricity_delivered_today(),
+    )
 
 def publish(telegram):
     for attr, value in telegram:
@@ -392,14 +397,20 @@ except Exception as e:
 else:
     for telegram in serial_obj:
 
-for telegram in serial_reader.read_as_object():
-    if (datetime.now() - lastrun).seconds >= REPORT_INTERVAL:
-        # reset daily stats on midnight
-        if datetime.combine(datetime.today(), datetime.min.time()) > current_date:
+        if (datetime.now() - lastrun).seconds >= REPORT_INTERVAL:
+            # reset daily stats on midnight
+            if datetime.now().hour == 0:
+                print(f"its now {datetime.now().strftime("%Y-%m-%d %H:%M:%s")}, time to reset daily stats")
+                stats_persist.write_datafile()
+                publish_daily()
+                stats.reset_daily_stats()
+                current_date = datetime.combine(datetime.today(), datetime.min.time())
 
-            stats_persist.write_datafile()
-            stats.reset_daily_stats()
-            current_date = datetime.combine(datetime.today(), datetime.min.time())
+            if datetime.now().day == 1:
+                pass # todo: report on current month
 
-        lastrun = datetime.now()
-        publish(telegram)
+            if datetime.now().month == 1:
+                pass # todo: report on current year
+
+            lastrun = datetime.now()
+            publish(telegram=telegram)
