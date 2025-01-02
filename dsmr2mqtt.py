@@ -60,7 +60,9 @@ print("MQTT Client ID:  ", MQTT_CLIENTID)
 print("DSMR_PORT:       ", DSMR_PORT)
 print("Report interval: ", REPORT_INTERVAL, "s")
 
-current_date = datetime.combine(datetime.today(), datetime.min.time())
+current_date = datetime.today()
+
+# current_date = datetime.combine(datetime.today(), datetime.min.time())
 
 
 class ConsumptionStats:
@@ -110,6 +112,12 @@ class ConsumptionStats:
             self.gas_last_reading = gas_reading
 
     def update_electricity_consumption(self, tariff, reading):
+        # todo: I'd expect this update to be taking into account the update frequency,
+        #  or can we just keep adding these together?
+        #  Now it just substracts the amount used this instant from the total?
+        #  What we should do is to add every (1 sec) telegram together into
+        #  hourly, daily, monthly and yearly numbers.
+
         if tariff == "0001":
             self.electricity_used_today_tariff_low = round(
                 (float(reading) - self.electricity_used_tariff_low), 3
@@ -161,7 +169,7 @@ class ConsumptionStats:
 
 class DataPersistence:
     def __init__(self) -> None:
-        self.data = self.load_datafile()
+        self.load_datafile()
 
     def get_value(self, key):
         return self.data[key]
@@ -170,11 +178,22 @@ class DataPersistence:
         self.data[key] = value
 
     def load_datafile(self):
-        f = open(READINGS_PERISTENCE_DATA_PATH)
-        file_data = json.load(f)
-        f.close()
+        # Try to load the previous stats. If file does not exist, or is badly formatted.
+        # reset all to zero.
+        try:
+            f = open(READINGS_PERISTENCE_DATA_PATH)
+            self.data = json.load(f)
+            f.close()
 
-        return file_data
+        except:
+            self.data = {}
+            self.data["electricity_low_value"] = float(0)
+            self.data["electricity_high_value"] = float(0)
+            self.data['electricity_delivered_low_value'] = float(0)
+            self.data['electricity_delivered_high_value'] = float(0)
+            self.data['gas_meter_value'] = float(0)
+            self.data['file_date'] = datetime.now().strftime("%Y-%m-%d %H:%M:%s")
+
 
     def write_datafile(self):
         with open(READINGS_PERISTENCE_DATA_PATH, "w", encoding="utf-8") as outfile:
