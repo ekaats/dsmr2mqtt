@@ -32,9 +32,6 @@ if is_docker() == True:
     GAS_CURRENT_CONSUMPTION_REPORT_INTERVAL = int(
         os.environ.get("GAS_CURRENT_CONSUMPTION_REPORT_INTERVAL", 60)
     )
-    READINGS_PERISTENCE_DATA_PATH = os.environ.get(
-        "READINGS_PERISTENCE_DATA_PATH", "/data/readings.json"
-    )
     LASTREADING_TIMESTAMP = datetime.now().strftime("%Y-%m-%d %H:%M:%s")
 else:
     import json
@@ -49,9 +46,6 @@ else:
         DSMR_PORT = settings.get("dsmr_port", "/dev/ttyUSB0")
         DSMR_VERSION = settings.get("dsmr_version", 5)
         REPORT_INTERVAL = settings.get("reportinterval", 15)
-        READINGS_PERISTENCE_DATA_PATH = settings.get(
-            "persistence_data_path", "data/readings.json"
-        )
         LASTREADING_TIMESTAMP = datetime.now().strftime("%Y-%m-%d %H:%M:%s")
 
 print("MQTT Host:       ", MQTT_HOST)
@@ -61,145 +55,6 @@ print("DSMR_PORT:       ", DSMR_PORT)
 print("Report interval: ", REPORT_INTERVAL, "s")
 
 current_date = datetime.today()
-
-# current_date = datetime.combine(datetime.today(), datetime.min.time())
-
-
-class ConsumptionStats:
-
-    def __init__(
-        self,
-        electricity_used_tariff_low,
-        electricity_used_tariff_high,
-        electricity_delivered_tariff_low,
-        electricity_delivered_tariff_high,
-        gas_used,
-    ):
-        self.name = "Energy Consumption Statistics"
-        self.electricity_used_tariff_low = float(electricity_used_tariff_low)
-        self.electricity_used_tariff_high = float(electricity_used_tariff_high)
-        self.electricity_used_today_tariff_low = float(0)
-        self.electricity_used_today_tariff_high = float(0)
-        self.electricity_delivered_tariff_low = float(electricity_delivered_tariff_low)
-        self.electricity_delivered_tariff_high = float(
-            electricity_delivered_tariff_high
-        )
-        self.electricity_delivered_today_tariff_low = float(0)
-        self.electricity_delivered_today_tariff_high = float(0)
-        self.gas_used = gas_used
-        self.gas_used_today = 0
-        self.gas_last_reading = 0
-        self.gas_current_delivery = 0
-        self.last_gas_current_consumption_report_timestamp = datetime.combine(
-            datetime.today(), datetime.min.time()
-        )
-
-    def update_gas_consumption(self, gas):
-        gas_reading = float(gas)
-        self.gas_used_today = round(gas_reading - self.gas_used, 3)
-
-        if (
-            datetime.now() - self.last_gas_current_consumption_report_timestamp
-        ).total_seconds() > GAS_CURRENT_CONSUMPTION_REPORT_INTERVAL:
-            if self.gas_last_reading > 0:
-                self.gas_current_delivery = round(
-                    (gas_reading - self.gas_last_reading)
-                    * (3600 / GAS_CURRENT_CONSUMPTION_REPORT_INTERVAL),
-                    3,
-                )
-                self.last_gas_current_consumption_report_timestamp = datetime.now()
-
-            self.gas_last_reading = gas_reading
-
-    def update_electricity_consumption(self, tariff, reading):
-        # todo: I'd expect this update to be taking into account the update frequency,
-        #  or can we just keep adding these together?
-        #  Now it just substracts the amount used this instant from the total?
-        #  What we should do is to add every (1 sec) telegram together into
-        #  hourly, daily, monthly and yearly numbers.
-
-        if tariff == "0001":
-            self.electricity_used_today_tariff_low = round(
-                (float(reading) - self.electricity_used_tariff_low), 3
-            )
-
-        if tariff == "0002":
-            self.electricity_used_today_tariff_high = round(
-                (float(reading) - self.electricity_used_tariff_high), 3
-            )
-
-    def update_electricity_delivery(self, tariff, reading):
-        if tariff == "0001":
-            self.electricity_delivered_today_tariff_low = round(
-                (float(reading) - self.electricity_delivered_tariff_low), 3
-            )
-
-        if tariff == "0002":
-            self.electricity_delivered_today_tariff_high = round(
-                (float(reading) - self.electricity_delivered_tariff_high), 3
-            )
-
-    def gas_today(self):
-        return self.gas_used_today
-
-    def gas_currently_delivered(self):
-        return self.gas_current_delivery
-
-    def electricity_consumption_today(self):
-        return round(
-            self.electricity_used_today_tariff_high
-            + self.electricity_used_today_tariff_low,
-            3,
-        )
-
-    def electricity_delivered_today(self):
-        return round(
-            self.electricity_delivered_today_tariff_high
-            + self.electricity_delivered_today_tariff_low,
-            3,
-        )
-
-    def reset_daily_stats(self):
-        self.electricity_used_today_tariff_low = float(0)
-        self.electricity_used_today_tariff_high = float(0)
-        self.electricity_delivered_today_tariff_low = float(0)
-        self.electricity_delivered_today_tariff_high = float(0)
-        self.gas_used_today = float(0)
-
-
-class DataPersistence:
-    def __init__(self) -> None:
-        self.load_datafile()
-
-    def get_value(self, key):
-        return self.data[key]
-
-    def set_value(self, key, value):
-        self.data[key] = value
-
-    def load_datafile(self):
-        # Try to load the previous stats. If file does not exist, or is badly formatted.
-        # reset all to zero.
-        try:
-            f = open(READINGS_PERISTENCE_DATA_PATH)
-            self.data = json.load(f)
-            f.close()
-
-        except:
-            self.data = {}
-            self.data["electricity_low_value"] = float(0)
-            self.data["electricity_high_value"] = float(0)
-            self.data['electricity_delivered_low_value'] = float(0)
-            self.data['electricity_delivered_high_value'] = float(0)
-            self.data['gas_meter_value'] = float(0)
-            self.data['file_date'] = datetime.now().strftime("%Y-%m-%d %H:%M:%s")
-
-
-    def write_datafile(self):
-        with open(READINGS_PERISTENCE_DATA_PATH, "w", encoding="utf-8") as outfile:
-            self.data["file_date"] = str(datetime.now())
-            json.dump(self.data, outfile)
-
 
 def connect_mqtt():
     def on_connect(client, userdata, flags, rc):
@@ -218,70 +73,23 @@ def connect_mqtt():
 
 def process(topic, value):
 
-    try:
-        if topic == "dsmr/reading/timestamp":
-            LASTREADING_TIMESTAMP = str(value)
 
-        if topic == "dsmr/consumption/gas/delivered":
-            stats.update_gas_consumption(str(value))
-            client.publish(
-                "dsmr/consumption/gas/read_at",
-                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            )
-            client.publish(
-                "dsmr/consumption/gas/currently_delivered",
-                stats.gas_currently_delivered(),
-            )
-            client.publish("dsmr/day-consumption/gas", stats.gas_today())
+    if topic == "dsmr/reading/timestamp":
+        LASTREADING_TIMESTAMP = str(value)
 
-        if topic == "dsmr/reading/electricity_delivered_1":
-            stats.update_electricity_consumption("0001", str(value))
-            client.publish(
-                "dsmr/day-consumption/electricity1",
-                stats.electricity_used_today_tariff_low,
-            )
+    if topic == "dsmr/consumption/gas/delivered":
 
-        if topic == "dsmr/reading/electricity_delivered_2":
-            stats.update_electricity_consumption("0002", str(value))
-            client.publish(
-                "dsmr/day-consumption/electricity2",
-                stats.electricity_used_today_tariff_high,
-            )
+        client.publish(
+            "dsmr/consumption/gas/read_at",
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        )
+        client.publish(
+            "dsmr/consumption/gas/currently_delivered",
 
-        if topic == "dsmr/reading/electricity_returned_1":
-            stats.update_electricity_delivery("0001", str(value))
-            client.publish(
-                "dsmr/day-consumption/electricity1_returned",
-                stats.electricity_delivered_today_tariff_low,
-            )
+        )
 
-        if topic == "dsmr/reading/electricity_returned_2":
-            stats.update_electricity_delivery("0002", str(value))
-            client.publish(
-                "dsmr/day-consumption/electricity2_returned",
-                stats.electricity_delivered_today_tariff_high,
-            )
+    client.publish(topic, str(value))
 
-        client.publish(topic, str(value))
-
-    except KeyError:
-        print(f"{topic} has no value")
-
-def publish_daily():
-    """
-    This runs daily. It gives the consumption amount for the day at midnight
-
-    :return:
-    """
-    # also periodically update electricity totals
-    client.publish(
-        "dsmr/day-consumption/electricity_merged",
-        stats.electricity_consumption_today(),
-    )
-    client.publish(
-        "dsmr/day-consumption/electricity_returned_merged",
-        stats.electricity_delivered_today(),
-    )
 
 def publish(telegram):
     for attr, value in telegram:
@@ -448,14 +256,7 @@ serial_reader = SerialReader(
 )
 
 # init stats counter
-stats_persist = DataPersistence()
-stats = ConsumptionStats(
-    stats_persist.get_value("electricity_low_value"),
-    stats_persist.get_value("electricity_high_value"),
-    stats_persist.get_value("electricity_delivered_low_value"),
-    stats_persist.get_value("electricity_delivered_high_value"),
-    stats_persist.get_value("gas_meter_value"),
-)
+
 try:
     serial_obj = serial_reader.read_as_object()
 except Exception:
@@ -467,10 +268,6 @@ if serial_obj is not None:
         if (datetime.now() - lastrun).seconds >= REPORT_INTERVAL:
             # reset daily stats on midnight
             if datetime.now().hour == 0:
-                print(f"its now {datetime.now().strftime('%Y-%m-%d %H:%M:%s')}, time to reset daily stats")
-                stats_persist.write_datafile()
-                publish_daily()
-                stats.reset_daily_stats()
                 current_date = datetime.combine(datetime.today(), datetime.min.time())
 
             if datetime.now().day == 1:
