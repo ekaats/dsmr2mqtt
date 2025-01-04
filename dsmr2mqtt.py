@@ -458,10 +458,10 @@ stats = ConsumptionStats(
 )
 try:
     serial_obj = serial_reader.read_as_object()
-except Exception as e:
-    print(f"Exception: {e}")
-    pass
-else:
+except Exception:
+    serial_obj = None
+
+if serial_obj is not None:
     for telegram in serial_obj:
 
         if (datetime.now() - lastrun).seconds >= REPORT_INTERVAL:
