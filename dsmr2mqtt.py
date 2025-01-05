@@ -259,7 +259,7 @@ serial_reader = SerialReader(
 
 try:
     serial_obj = serial_reader.read_as_object()
-except Exception:
+except UnicodeDecodeError:
     serial_obj = None
 
 if serial_obj is not None:
