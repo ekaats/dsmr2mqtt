@@ -166,17 +166,17 @@ def publish(telegram):
             case "INSTANTANEOUS_CURRENT_L3":
                 process("dsmr/reading/phase_power_current_l3", value=value.value)
             case "INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE":
-                pass
+                process("dsmr/reading/phase_currently_delivered_l1", value=value.value)
             case "INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE":
-                pass
+                process("dsmr/reading/phase_currently_delivered_l2", value=value.value)
             case "INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE":
-                pass
+                process("dsmr/reading/phase_currently_delivered_l3", value=value.value)
             case "INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE":
-                pass
+                process("dsmr/reading/phase_currently_returned_l1", value=value.value)
             case "INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE":
-                pass
+                process("dsmr/reading/phase_currently_returned_l2", value=value.value)
             case "INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE":
-                pass
+                process("dsmr/reading/phase_currently_returned_l3", value=value.value)
             case "EQUIPMENT_IDENTIFIER_GAS":
                 process("dsmr/meter-stats/gas_meter_id", value=value.value)
             case "HOURLY_GAS_METER_READING":
@@ -189,13 +189,6 @@ def publish(telegram):
                 """
                 These MQTT topics are used in the HA DSMR reader,
                 but don't seem to have a good DSMR counterpart
-                
-                "dsmr/reading/phase_currently_delivered_l1"
-                "dsmr/reading/phase_currently_delivered_l2"
-                "dsmr/reading/phase_currently_delivered_l3"
-                "dsmr/reading/phase_currently_returned_l1"
-                "dsmr/reading/phase_currently_returned_l2"
-                "dsmr/reading/phase_currently_returned_l3"
                 "dsmr/reading/extra_device_delivered"
                 
                 "dsmr/day-consumption/electricity1_cost"
